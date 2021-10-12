@@ -5,6 +5,8 @@ navbar:
   left:
     - text: "Data Manipulation"
       href: DataManipulation_1.html
+    - text: "Match-up"
+      href: Match-up_2.html
 output:
   html_document:
     theme: cosmo

@@ -1,7 +1,5 @@
 ---
 title: "Data Manipulation"
-author: "Simeon Lisovski (AWI)"
-date: "11/10/2021"
 output: html_document
 editor_options: 
   chunk_output_type: console
