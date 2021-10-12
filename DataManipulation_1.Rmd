@@ -32,7 +32,7 @@ editor_options:
 
 <details>
   <summary>in-situ dataset</summary>
-  ```{r dataset v3, message=FALSE, warning=FALSE,  results=FALSE, eval = FALSE}
+  ```{r dataset v3, message=FALSE, warning=FALSE,  results=FALSE, eval = TRUE}
   v3_mean <- as_tibble(
     read.table("data/cci permafrost GT yearly/v3/20210218_focus_mean_yr_3.csv", sep = ";", dec = ".", header = T)
     ) %>%     
@@ -71,7 +71,7 @@ editor_options:
 
 <details>
   <summary>ISBA dataset</summary>
-  ```{r ISBA data, message=FALSE, warning=FALSE,  results=FALSE, eval = FALSE}
+  ```{r ISBA data, message=FALSE, warning=FALSE,  results=FALSE, eval = TRUE}
   ncFile <- nc_open("data/TG_with_assimilation.nc")
   
   crds  <- matrix(c(ncvar_get(ncFile, "lon"), ncvar_get(ncFile, "lat")), ncol = 2, byrow = F)
@@ -134,3 +134,14 @@ editor_options:
 ![](figures/Figure_1.1.png)
 
 _Figure 1.1: ISBA simulation data for two sites. Gray dots show original ground temperature at different depths and a 3 hour interval. Colored circles are annual mean ground temperatures for different depths. Triangles to top and bottom show maximal annual and minimal annual ground temperatures respectively._
+
+
+```{r}
+statsTable <- statsTab %>% filter(Year == 2008) %>%
+  mutate(Depth = round(Depth*100, 2)) %>%
+  arrange(Site, Year, Depth) %>% select(-x, -Year)
+
+library(knitr)
+kable(statsTable %>% filter(Site != "Krasnoshchelie"), caption = "Annual statistics for the Year 2008 in Kanevka")
+kable(statsTable %>% filter(Site == "Krasnoshchelie"), caption = "Annual statistics for the Year 2008 in Krasnoshchelie")
+```
