@@ -1,20 +1,10 @@
-name: "ESA_PVIR_d4.1"
+name: "ISBA"
 output_dir: "docs"
 navbar:
-  title: "ESA_PVIR_d4.1"
+  title: "ISBA"
   left:
-    - text: "Methods: MAGT"
-      href: Methods_MAGT.html
-    - text: "Results: MAGT"
-      href: Results_MAGT.html
-    - text: "Methods: ALT"
-      href: Methods_ALT.html
-    - text: "Results: ALT"
-      href: Results_ALT.html
-    - text: "Methods: PE"
-      href: Methods_PE.html
-    - text: "Results: PE"
-      href: Results_PE.html
+    - text: "Data Manipulation"
+      href: DataManipulation_1.html
 output:
   html_document:
     theme: cosmo

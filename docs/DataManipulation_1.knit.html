@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+
+<meta name="author" content="Simeon Lisovski (AWI)" />
+
+<meta name="date" content="2021-11-10" />
+
+<title>Data Manipulation</title>
+
+<script src="site_libs/header-attrs-2.10/header-attrs.js"></script>
+<script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<style>h1 {font-size: 34px;}
+       h1.title {font-size: 38px;}
+       h2 {font-size: 30px;}
+       h3 {font-size: 24px;}
+       h4 {font-size: 18px;}
+       h5 {font-size: 16px;}
+       h6 {font-size: 12px;}
+       code {color: inherit; background-color: rgba(0, 0, 0, 0.04);}
+       pre:not([class]) { background-color: white }</style>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-9.12.0/default.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+
+<style type="text/css">
+  code{white-space: pre-wrap;}
+  span.smallcaps{font-variant: small-caps;}
+  span.underline{text-decoration: underline;}
+  div.column{display: inline-block; vertical-align: top; width: 50%;}
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  ul.task-list{list-style: none;}
+    </style>
+
+<style type="text/css">code{white-space: pre;}</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+
+
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+img {
+  max-width:100%;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+pre code {
+  padding: 0;
+}
+</style>
+
+
+<style type="text/css">
+.dropdown-submenu {
+  position: relative;
+}
+.dropdown-submenu>.dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-top: -6px;
+  margin-left: -1px;
+  border-radius: 0 6px 6px 6px;
+}
+.dropdown-submenu:hover>.dropdown-menu {
+  display: block;
+}
+.dropdown-submenu>a:after {
+  display: block;
+  content: " ";
+  float: right;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-width: 5px 0 5px 5px;
+  border-left-color: #cccccc;
+  margin-top: 5px;
+  margin-right: -10px;
+}
+.dropdown-submenu:hover>a:after {
+  border-left-color: #adb5bd;
+}
+.dropdown-submenu.pull-left {
+  float: none;
+}
+.dropdown-submenu.pull-left>.dropdown-menu {
+  left: -100%;
+  margin-left: 10px;
+  border-radius: 6px 0 6px 6px;
+}
+</style>
+
+<script type="text/javascript">
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark it active
+  menuAnchor.tab('show');
+
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+
+  // Navbar adjustments
+  var navHeight = $(".navbar").first().height() + 15;
+  var style = document.createElement('style');
+  var pt = "padding-top: " + navHeight + "px; ";
+  var mt = "margin-top: -" + navHeight + "px; ";
+  var css = "";
+  // offset scroll position for anchor links (for fixed navbar)
+  for (var i = 1; i <= 6; i++) {
+    css += ".section h" + i + "{ " + pt + mt + "}\n";
+  }
+  style.innerHTML = "body {" + pt + "padding-bottom: 40px; }\n" + css;
+  document.head.appendChild(style);
+});
+</script>
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "&#xe258;";
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+  background-color: transparent;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<!-- code folding -->
+
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">ISBA</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="DataManipulation_1.html">Data Manipulation</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div id="header">
+
+
+
+<h1 class="title toc-ignore">Data Manipulation</h1>
+<h4 class="author">Simeon Lisovski (AWI)</h4>
+<h4 class="date">11/10/2021</h4>
+
+</div>
+
+
+<style type="text/css">
+.main-container {
+  max-width: 1400px;
+  margin-left: auto;
+  margin-right: auto;
+}
+</style>
+<details>
+<summary>
+R Library
+</summary>
+<pre class="r"><code>  library(readxl)
+  library(ncdf4)
+  library(raster)
+  library(tidyverse)
+  library(ggforce)
+  library(grid)
+  library(sf)
+  sf::sf_use_s2(FALSE)</code></pre>
+</details>
+<p><br/></p>
+<details>
+<summary>
+in-situ dataset
+</summary>
+<pre class="r"><code>  v3_mean &lt;- as_tibble(
+    read.table(&quot;data/cci permafrost GT yearly/v3/20210218_focus_mean_yr_3.csv&quot;, sep = &quot;;&quot;, dec = &quot;.&quot;, header = T)
+    ) %&gt;%     
+    mutate(Source = if_else(Source%in%c(&quot;M. Ulrich&quot;, &quot;A. Kholodov&quot;, &quot;PANGAEA&quot;, &quot;Pangaea&quot;, &quot;Wangetal&quot;), &quot;GTN-P&quot;, Source)) %&gt;%
+    mutate(Source = if_else(Source==&quot;GTN-P&quot;, &quot;GTN-P &amp; USGS&quot;, if_else(Source==&quot;Nordica&quot;, &quot;Nordicana-D&quot;, Source))) %&gt;%
+    mutate(Source = if_else(Source==&quot;Above&quot;, &quot;NASA ABoVE&quot;, Source)) %&gt;%
+    select(c(&quot;cci_ID&quot;, &quot;Dataset&quot;,  &quot;Name&quot;, &quot;Source&quot;, &quot;Longitude&quot;, &quot;Latitude&quot;, &quot;Year&quot;, &quot;Depth&quot;), starts_with(&quot;X&quot;), 
+           -starts_with(&quot;X.&quot;), -&quot;X&quot;) %&gt;% 
+    rename_at(vars(starts_with(&#39;X&#39;)), function(x) paste0(&quot;mean_&quot;, substring(x, 2, nchar(x)))) %&gt;%
+    rename(holeDepth = Depth)
+  
+  v3_min &lt;- as_tibble(
+    read.table(&quot;data/cci permafrost GT yearly/v3/20210218_focus_min__yr_3.csv&quot;, sep = &quot;;&quot;, dec = &quot;.&quot;, header = T)
+    ) %&gt;%     
+    select(c(&quot;cci_ID&quot;, &quot;Year&quot;), starts_with(&quot;X&quot;)) %&gt;% 
+    rename_at(vars(starts_with(&#39;X&#39;)), function(x) paste0(&quot;min_&quot;, substring(x, 2, nchar(x))))
+  
+  v3_max &lt;- as_tibble(
+    read.table(&quot;data/cci permafrost GT yearly/v3/20210218_focus_max_yr_3.csv&quot;, sep = &quot;;&quot;, dec = &quot;.&quot;, header = T)
+    ) %&gt;%     
+    select(c(&quot;cci_ID&quot;, &quot;Year&quot;), starts_with(&quot;X&quot;)) %&gt;% 
+    rename_at(vars(starts_with(&#39;X&#39;)), function(x) paste0(&quot;max_&quot;, substring(x, 2, nchar(x))))
+  
+  v3Dat &lt;- v3_mean %&gt;% left_join(v3_min, by = c(&quot;cci_ID&quot;, &quot;Year&quot;), ) %&gt;%
+    left_join(v3_max, by = c(&quot;cci_ID&quot;, &quot;Year&quot;)) %&gt;%
+    left_join(as.tibble(read.table(&quot;data/finalmatchup.txt&quot;, header = T, sep = &quot;\t&quot;)), by = &quot;Name&quot;) %&gt;%
+    mutate(Latitude = if_else(is.na(Lat), Latitude, Lat), Longitude = if_else(is.na(Lon), Longitude, Lon)) %&gt;%
+    select(-Lon, -Lat) %&gt;%
+    mutate_at(vars(starts_with(&quot;m&quot;)), ~ as.numeric(as.character(.))) %&gt;%
+    pivot_longer(col = starts_with(c(&quot;m&quot;))) %&gt;% rename(Temperature = value) %&gt;%
+    mutate(Type = sub(&quot;_.*&quot;, &quot;&quot;, name), Depth = as.factor(sub(&quot;.*_&quot;, &quot;&quot;, name))) %&gt;% select(-name) %&gt;%
+    select(c(cci_ID, Dataset, Name, Source, Longitude, Latitude, Year, holeDepth, Type, Depth, Temperature)) %&gt;%
+    filter(!is.na(Longitude), !is.na(Temperature))</code></pre>
+</details>
+<p><br/></p>
+<details>
+<summary>
+ISBA dataset
+</summary>
+<pre class="r"><code>ncFile &lt;- nc_open(&quot;data/TG_with_assimilation.nc&quot;)
+
+crds  &lt;- matrix(c(ncvar_get(ncFile, &quot;lon&quot;), ncvar_get(ncFile, &quot;lat&quot;)), ncol = 2, byrow = F)
+depth &lt;- ncvar_get(ncFile, &quot;depth&quot;)
+time  &lt;- as.POSIXct(&quot;2008-01-01 00:00:00.0&quot;, tz = &quot;UTC&quot;) + ncvar_get(ncFile, &quot;time&quot;)*60*60
+tempA &lt;- ncvar_get(ncFile, &quot;temperature&quot;)
+
+nc_close(ncFile)
+
+## closest site
+sf_sites &lt;- st_as_sf(v3Dat %&gt;% filter(!duplicated(Name)) %&gt;% select(c(cci_ID, Name, Longitude, Latitude)),
+                     coords = c(&quot;Longitude&quot;, &quot;Latitude&quot;), crs = 4326) 
+sf_crds  &lt;- st_as_sfc(lapply(split(crds, 1:nrow(crds)), function(x) st_point(x)), crs = 4326)
+
+dat &lt;- data.frame(Name = v3Dat %&gt;% filter(!duplicated(Name)) %&gt;% pull(&quot;Name&quot;), 
+                  apply(st_distance(sf_sites, sf_crds)/1000, 2, as.numeric))
+dat$site &lt;- apply(dat[,-1],  1, function(x) which.min(x))
+dat$dist &lt;- apply(dat[,2:5], 1, function(x) x[x[4]])
+sites    &lt;- as_tibble(dat[!is.na(dat$dist),c(1,5:6)]) %&gt;% arrange(site, dist) %&gt;% filter(!duplicated(site))
+
+## Annual min, mean, max
+out &lt;- as_tibble(data.frame(Site  = rep(rep(sites$Name, each = dim(tempA)[1]), dim(tempA)[3]), 
+                            Time  = rep(time, each = dim(tempA)[1]*dim(tempA)[2]),
+                            Depth = rep(depth, dim(tempA)[2]*dim(tempA)[3]), Temp = c(tempA))) %&gt;%
+        mutate(Temp = Temp - 273.15)
+
+statsTab &lt;- out %&gt;% filter(Site!=&quot;Upper river Lotta&quot;) %&gt;% 
+  mutate(Year = as.numeric(format(Time, &quot;%Y&quot;))) %&gt;%
+  group_by(Site, Depth, Year) %&gt;% 
+  summarise_at(vars(Temp), list(Min = min, Mean = mean, Max = max)) %&gt;%
+  mutate(x = as.POSIXct(glue::glue(&quot;{Year}-06-21&quot;))) %&gt;%
+  filter(Year&lt;2019)
+
+plt &lt;- lapply((sites %&gt;% pull(Name))[1:2], function(s) {
+  
+pl &lt;- ggplot(NULL, aes(x, y)) +
+  geom_point(data = out %&gt;% filter(Site==s),
+             mapping = aes(x = Time, y = Temp), shape = 16, size = 0.2, alpha = 0.2) +
+  geom_point(data = statsTab %&gt;% filter(Site==s),, 
+             mapping = aes(x = x, y = Max, fill = as.factor(round(Depth*100,1))), 
+             shape = 24, size = 2, show.legend = FALSE) +
+  geom_point(data = statsTab %&gt;% filter(Site==s),, 
+             mapping = aes(x = x, y = Min, fill = as.factor(round(Depth*100,1))), 
+             shape = 25, size = 2, show.legend = FALSE) +
+  geom_point(data = statsTab %&gt;% filter(Site==s), 
+             mapping = aes(x = x, y = Mean, fill = as.factor(round(Depth*100,1))), 
+             shape = 21, size = 2, show.legend = FALSE) +
+  ylim(range(out$Temp, na.rm = T)) +
+  labs(y = &quot;Temperature&quot;, x = &quot;&quot;, title = s) +
+  theme(text = element_text(size=rel(4))) +
+  theme_bw()
+})
+
+png(&quot;figures/Figure_1.1.png&quot;, width = 23, height = 12, units = &quot;cm&quot;, res = 250)
+  gridExtra::grid.arrange(plt[[1]], plt[[2]], nrow = 1)
+dev.off()</code></pre>
+</details>
+<p><br/></p>
+<p><img src="figures/Figure_1.1.png" /></p>
+<p><em>Figure 1.1: ISBA simulation data for two sites. Gray dots show original ground temperature at different depths and a 3 hour interval. Colored circles are annual mean ground temperatures for different depths. Triangles to top and bottom show maximal annual and minimal annual ground temperatures respectively.</em></p>
+
+
+
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.odd').parent('tbody').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open');
+  });
+});
+</script>
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
