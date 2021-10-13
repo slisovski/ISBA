@@ -32,7 +32,7 @@ editor_options:
 
 <details>
   <summary>in-situ dataset</summary>
-  ```{r dataset v3, message=FALSE, warning=FALSE,  results=FALSE, eval = FALSE}
+```{r dataset v3, message=FALSE, warning=FALSE,  results=FALSE, eval = FALSE}
   v3_mean <- as_tibble(
     read.table("data/cci permafrost GT yearly/v3/20210218_focus_mean_yr_3.csv", sep = ";", dec = ".", header = T)
     ) %>%     
@@ -99,9 +99,11 @@ editor_options:
           mutate(Temp = Temp - 273.15)
   
   statsTab <- out %>% filter(Site!="Upper river Lotta") %>% 
-    mutate(Year = as.numeric(format(Time, "%Y"))) %>%
-    group_by(Site, Depth, Year) %>% 
+    mutate(Year = as.numeric(format(Time, "%Y")), Month = as.numeric(format(Time, "%m"))) %>%
+    group_by(Site, Depth, Year, Month) %>% 
     summarise_at(vars(Temp), list(Min = min, Mean = mean, Max = max)) %>%
+    group_by(Site, Depth, Year) %>% 
+    summarise(Mean = mean(Mean), Max = mean(Max), Min = mean(Min)) %>%
     mutate(x = as.POSIXct(glue::glue("{Year}-06-21"))) %>%
     filter(Year<2019)
   
@@ -146,11 +148,13 @@ _Figure 1.1: ISBA simulation data for two sites. Gray dots show original ground 
 ```{r isab tables, echo=FALSE, results='asis'}
 load("data/isbaDat.rda")
 statsTable <- isbaDat %>% filter(Site!="Upper river Lotta") %>% 
-  mutate(Year = as.numeric(format(Time, "%Y"))) %>%
-  group_by(Site, Depth, Year) %>% 
-  summarise_at(vars(Temp), list(Min = min, Mean = mean, Max = max)) %>%
-  mutate(x = as.POSIXct(glue::glue("{Year}-06-21"))) %>%
-  filter(Year<2019) %>% filter(Year == 2008) %>%
+    mutate(Year = as.numeric(format(Time, "%Y")), Month = as.numeric(format(Time, "%m"))) %>%
+    group_by(Site, Depth, Year, Month) %>% 
+    summarise_at(vars(Temp), list(Min = min, Mean = mean, Max = max)) %>%
+    group_by(Site, Depth, Year) %>% 
+    summarise(Mean = mean(Mean), Max = mean(Max), Min = mean(Min)) %>%
+    mutate(x = as.POSIXct(glue::glue("{Year}-06-21"))) %>%
+    filter(Year<2019) %>% filter(Year == 2008) %>%
   mutate(Depth = round(Depth*100, 2)) %>%
   arrange(Site, Year, Depth) %>% select(-x, -Year)
 

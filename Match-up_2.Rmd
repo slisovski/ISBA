@@ -34,9 +34,11 @@ load("data/v3Dat.rda")
 load("data/isbaDat.rda")
 
 statsTab <- isbaDat %>% filter(Site!="Upper river Lotta") %>% 
-  mutate(Year = as.numeric(format(Time, "%Y"))) %>%
-  group_by(Site, Depth, Year) %>% 
+  mutate(Year = as.numeric(format(Time, "%Y")), Month = as.numeric(format(Time, "%m"))) %>%
+  group_by(Site, Depth, Year, Month) %>% 
   summarise_at(vars(Temp), list(Min = min, Mean = mean, Max = max)) %>%
+  group_by(Site, Depth, Year) %>% 
+  summarise(Mean = mean(Mean), Max = mean(Max), Min = mean(Min)) %>%
   filter(Year<2019) %>%
   pivot_longer(cols = c(Min, Mean, Max)) %>% 
   mutate(Type = ifelse(name=="Mean", "mean", ifelse(name=="Max", "max", "min"))) %>%
