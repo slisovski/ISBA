@@ -12,7 +12,7 @@
 
 <meta name="date" content="2021-11-10" />
 
-<title>Match-up</title>
+<title>Match-up &amp; Results</title>
 
 <script src="site_libs/header-attrs-2.10/header-attrs.js"></script>
 <script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
@@ -246,7 +246,7 @@ $(document).ready(function () {
   <a href="DataManipulation_1.html">Data Manipulation</a>
 </li>
 <li>
-  <a href="Match-up_2.html">Match-up</a>
+  <a href="Match-up_2.html">Match-up &amp; Results</a>
 </li>
       </ul>
       <ul class="nav navbar-nav navbar-right">
@@ -260,7 +260,7 @@ $(document).ready(function () {
 
 
 
-<h1 class="title toc-ignore">Match-up</h1>
+<h1 class="title toc-ignore">Match-up &amp; Results</h1>
 <h4 class="author"></h4>
 <h4 class="date">11/10/2021</h4>
 
@@ -288,6 +288,78 @@ R Library
   sf::sf_use_s2(FALSE)</code></pre>
 </details>
 <p><br/></p>
+<details>
+<summary>
+Match-up
+</summary>
+<pre class="r"><code>  v3match &lt;- v3Dat %&gt;% filter(Name%in%unique(statsTab$Site) &amp; Year%in%statsTab$Year)
+  v3match$ISBA &lt;- apply(as.data.frame(v3match), 1, function(x) {
+    tmp &lt;- statsTab %&gt;% filter(Site==as.character(x[3]) &amp; Year==as.numeric(x[7]) &amp; Type==as.character(x[9]))
+    approx(x = tmp$Depth, y = tmp$value, xout = x[10])$y
+  })
+  v3match &lt;- v3match %&gt;% mutate(resid = ISBA - Temperature)</code></pre>
+</details>
+<p><br/></p>
+<details>
+<summary>
+Match-up
+</summary>
+<pre class="r"><code>  histDat &lt;- v3match %&gt;% select(Type, Temperature, ISBA) %&gt;% 
+    pivot_longer(cols = c(Temperature, ISBA)) %&gt;% mutate(name = ifelse(name==&quot;Temperature&quot;, &quot;In-situ&quot;, name))
+  
+  png(&quot;figures/Figure_2.1.png&quot;, width = 29, height = 12, units = &quot;cm&quot;, res = 250)
+  ggplot(histDat) + geom_histogram(aes(x = value, fill = name), binwidth=1, position=&quot;dodge&quot;) +
+    theme_bw() + labs(x = &quot;Ground temperature&quot;, y = &quot;Frequency&quot;) +
+    facet_grid(~ as.factor(Type))
+  dev.off()</code></pre>
+</details>
+<p><br/></p>
+<p><img src="figures/Figure_2.1.png" /> <em>Figure 2.1: Frequency distribution of annual ground temperatures for in-site measurements and ISBA simulation.</em></p>
+<details>
+<summary>
+Summary plot
+</summary>
+<pre class="r"><code>  mean &lt;- ggplot(NULL, aes(x,y)) +
+    geom_point(data = v3match %&gt;% filter(Type==&quot;mean&quot;), mapping = aes(as.numeric(as.character(Depth)), resid)) +
+    ylim(min(v3match %&gt;% filter(Type==&quot;mean&quot;) %&gt;% pull(resid)), 0.5) +
+    geom_hline(yintercept = 0, linetype = &quot;dashed&quot;) + 
+    labs(y = &quot;&quot;, x = &quot;&quot;, title = &quot;Mean Annual Ground Temperature&quot;, col = &quot;Site&quot;) +
+    geom_line(data = v3match %&gt;% filter(Type==&quot;mean&quot;) %&gt;% group_by(Name, Depth) %&gt;% summarise(mSite = median(resid)),
+              mapping = aes(x = as.numeric(as.character(Depth)), y = mSite, col = Name)) +
+    theme_bw() +
+    theme(text = element_text(size=rel(4)), plot.title = element_text(size=15),
+          legend.position = c(0.65, 0.7),
+          legend.background = element_rect(fill = &quot;white&quot;, size=0.5, linetype=&quot;solid&quot;, 
+                                    colour =&quot;grey29&quot;),
+          legend.text = element_text(size=10))
+  
+  max &lt;- ggplot(NULL, aes(x,y)) +
+    geom_point(data = v3match %&gt;% filter(Type==&quot;max&quot;), mapping = aes(as.numeric(as.character(Depth)), resid)) +
+    ylim(min(v3match %&gt;% filter(Type==&quot;max&quot;) %&gt;% pull(resid)), 0.5) +
+    geom_hline(yintercept = 0, linetype = &quot;dashed&quot;) + 
+    labs(y = &quot;&quot;, x = &quot;&quot;, title = &quot;Max Annual Ground Temperature&quot;, col = &quot;Site&quot;) +
+    geom_line(data = v3match %&gt;% filter(Type==&quot;max&quot;) %&gt;% group_by(Name, Depth) %&gt;% summarise(mSite = median(resid)),
+              mapping = aes(x = as.numeric(as.character(Depth)), y = mSite, col = Name), show.legend = F) +
+    theme_bw() +
+    theme(text = element_text(size=rel(4)), plot.title = element_text(size=15))
+  
+  min &lt;- ggplot(NULL, aes(x,y)) +
+    geom_point(data = v3match %&gt;% filter(Type==&quot;min&quot;), mapping = aes(as.numeric(as.character(Depth)), resid)) +
+    ylim(min(v3match %&gt;% filter(Type==&quot;min&quot;) %&gt;% pull(resid)), 0.5) +
+    geom_hline(yintercept = 0, linetype = &quot;dashed&quot;) + 
+    labs(y = &quot;&quot;, x = &quot;&quot;, title = &quot;Min Annual Ground Temperature&quot;, col = &quot;Site&quot;) +
+    geom_line(data = v3match %&gt;% filter(Type==&quot;min&quot;) %&gt;% group_by(Name, Depth) %&gt;% summarise(mSite = median(resid)),
+              mapping = aes(x = as.numeric(as.character(Depth)), y = mSite, col = Name), show.legend = F) +
+    theme_bw() +
+    theme(text = element_text(size=rel(4)), plot.title = element_text(size=15))
+  
+  png(&quot;figures/Figure_2.2.png&quot;, width = 29, height = 12, units = &quot;cm&quot;, res = 250)
+      gridExtra::grid.arrange(mean, min, max, nrow = 1, bottom = &quot;Depth [cm]&quot;, left = &quot;Match-up residuals [°C]&quot;)
+  dev.off()</code></pre>
+</details>
+<p><br/></p>
+<p><img src="figures/Figure_2.2.png" /></p>
+<p><em>Figure 2.2: Residuals of Match-up temperature data between in-situ measurements and ISBA simulation.</em></p>
 
 
 

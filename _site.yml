@@ -5,7 +5,7 @@ navbar:
   left:
     - text: "Data Manipulation"
       href: DataManipulation_1.html
-    - text: "Match-up"
+    - text: "Match-up & Results"
       href: Match-up_2.html
 output:
   html_document:

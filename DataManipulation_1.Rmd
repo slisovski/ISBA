@@ -32,7 +32,7 @@ editor_options:
 
 <details>
   <summary>in-situ dataset</summary>
-  ```{r dataset v3, message=FALSE, warning=FALSE,  results=FALSE, eval = TRUE}
+  ```{r dataset v3, message=FALSE, warning=FALSE,  results=FALSE, eval = FALSE}
   v3_mean <- as_tibble(
     read.table("data/cci permafrost GT yearly/v3/20210218_focus_mean_yr_3.csv", sep = ";", dec = ".", header = T)
     ) %>%     
@@ -71,7 +71,7 @@ editor_options:
 
 <details>
   <summary>ISBA dataset</summary>
-  ```{r ISBA data, message=FALSE, warning=FALSE,  results=FALSE, eval = TRUE}
+  ```{r ISBA data, message=FALSE, warning=FALSE,  results=FALSE, eval = FALSE}
   ncFile <- nc_open("data/TG_with_assimilation.nc")
   
   crds  <- matrix(c(ncvar_get(ncFile, "lon"), ncvar_get(ncFile, "lat")), ncol = 2, byrow = F)
@@ -110,10 +110,10 @@ editor_options:
   pl <- ggplot(NULL, aes(x, y)) +
     geom_point(data = out %>% filter(Site==s),
                mapping = aes(x = Time, y = Temp), shape = 16, size = 0.2, alpha = 0.2) +
-    geom_point(data = statsTab %>% filter(Site==s),, 
+    geom_point(data = statsTab %>% filter(Site==s),
                mapping = aes(x = x, y = Max, fill = as.factor(round(Depth*100,1))), 
                shape = 24, size = 2, show.legend = FALSE) +
-    geom_point(data = statsTab %>% filter(Site==s),, 
+    geom_point(data = statsTab %>% filter(Site==s),
                mapping = aes(x = x, y = Min, fill = as.factor(round(Depth*100,1))), 
                shape = 25, size = 2, show.legend = FALSE) +
     geom_point(data = statsTab %>% filter(Site==s), 
@@ -131,13 +131,26 @@ editor_options:
   ```  
 </details><br/> 
 
+```{r save, echo=FALSE, eval=FALSE}
+save(v3Dat, file = "data/v3Dat.rda")
+write.table(v3Dat, "data/MAGT_v3.csv", sep = ",", dec = ".")
+isbaDat <- out
+save(isbaDat, file = "data/isbaDat.rda")
+```
+
 ![](figures/Figure_1.1.png)
 
 _Figure 1.1: ISBA simulation data for two sites. Gray dots show original ground temperature at different depths and a 3 hour interval. Colored circles are annual mean ground temperatures for different depths. Triangles to top and bottom show maximal annual and minimal annual ground temperatures respectively._
 
 
-```{r}
-statsTable <- statsTab %>% filter(Year == 2008) %>%
+```{r isab tables, echo=FALSE, results='asis'}
+load("data/isbaDat.rda")
+statsTable <- isbaDat %>% filter(Site!="Upper river Lotta") %>% 
+  mutate(Year = as.numeric(format(Time, "%Y"))) %>%
+  group_by(Site, Depth, Year) %>% 
+  summarise_at(vars(Temp), list(Min = min, Mean = mean, Max = max)) %>%
+  mutate(x = as.POSIXct(glue::glue("{Year}-06-21"))) %>%
+  filter(Year<2019) %>% filter(Year == 2008) %>%
   mutate(Depth = round(Depth*100, 2)) %>%
   arrange(Site, Year, Depth) %>% select(-x, -Year)
 

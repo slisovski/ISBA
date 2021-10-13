@@ -246,7 +246,7 @@ $(document).ready(function () {
   <a href="DataManipulation_1.html">Data Manipulation</a>
 </li>
 <li>
-  <a href="Match-up_2.html">Match-up</a>
+  <a href="Match-up_2.html">Match-up &amp; Results</a>
 </li>
       </ul>
       <ul class="nav navbar-nav navbar-right">
@@ -369,10 +369,10 @@ ISBA dataset
   pl &lt;- ggplot(NULL, aes(x, y)) +
     geom_point(data = out %&gt;% filter(Site==s),
                mapping = aes(x = Time, y = Temp), shape = 16, size = 0.2, alpha = 0.2) +
-    geom_point(data = statsTab %&gt;% filter(Site==s),, 
+    geom_point(data = statsTab %&gt;% filter(Site==s),
                mapping = aes(x = x, y = Max, fill = as.factor(round(Depth*100,1))), 
                shape = 24, size = 2, show.legend = FALSE) +
-    geom_point(data = statsTab %&gt;% filter(Site==s),, 
+    geom_point(data = statsTab %&gt;% filter(Site==s),
                mapping = aes(x = x, y = Min, fill = as.factor(round(Depth*100,1))), 
                shape = 25, size = 2, show.legend = FALSE) +
     geom_point(data = statsTab %&gt;% filter(Site==s), 
@@ -391,12 +391,6 @@ ISBA dataset
 <p><br/></p>
 <p><img src="figures/Figure_1.1.png" /></p>
 <p><em>Figure 1.1: ISBA simulation data for two sites. Gray dots show original ground temperature at different depths and a 3 hour interval. Colored circles are annual mean ground temperatures for different depths. Triangles to top and bottom show maximal annual and minimal annual ground temperatures respectively.</em></p>
-<pre class="r"><code>statsTable &lt;- statsTab %&gt;% filter(Year == 2008) %&gt;%
-  mutate(Depth = round(Depth*100, 2)) %&gt;%
-  arrange(Site, Year, Depth) %&gt;% select(-x, -Year)
-
-library(knitr)
-kable(statsTable %&gt;% filter(Site != &quot;Krasnoshchelie&quot;), caption = &quot;Annual statistics for the Year 2008 in Kanevka&quot;)</code></pre>
 <table>
 <caption>Annual statistics for the Year 2008 in Kanevka</caption>
 <thead>
@@ -460,7 +454,6 @@ kable(statsTable %&gt;% filter(Site != &quot;Krasnoshchelie&quot;), caption = &q
 </tr>
 </tbody>
 </table>
-<pre class="r"><code>kable(statsTable %&gt;% filter(Site == &quot;Krasnoshchelie&quot;), caption = &quot;Annual statistics for the Year 2008 in Krasnoshchelie&quot;)</code></pre>
 <table>
 <caption>Annual statistics for the Year 2008 in Krasnoshchelie</caption>
 <thead>
