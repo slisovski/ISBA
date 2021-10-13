@@ -82,7 +82,8 @@ _Figure 2.1: Frequency distribution of annual ground temperatures for in-site me
     ylim(min(v3match %>% filter(Type=="mean") %>% pull(resid)), 0.5) +
     geom_hline(yintercept = 0, linetype = "dashed") + 
     labs(y = "", x = "", title = "Mean Annual Ground Temperature", col = "Site") +
-    geom_line(data = v3match %>% filter(Type=="mean") %>% group_by(Name, Depth) %>% summarise(mSite = median(resid)),
+    geom_line(data = v3match %>% filter(Type=="mean") %>% group_by(Name, Depth) %>% 
+    summarise(mSite = median(resid)),
               mapping = aes(x = as.numeric(as.character(Depth)), y = mSite, col = Name)) +
     theme_bw() +
     theme(text = element_text(size=rel(4)), plot.title = element_text(size=15),
@@ -93,7 +94,7 @@ _Figure 2.1: Frequency distribution of annual ground temperatures for in-site me
   
   max <- ggplot(NULL, aes(x,y)) +
     geom_point(data = v3match %>% filter(Type=="max"), mapping = aes(as.numeric(as.character(Depth)), resid)) +
-    ylim(min(v3match %>% filter(Type=="max") %>% pull(resid)), 0.5) +
+    ylim(min(v3match %>% filter(Type=="max") %>% pull(resid)), 10) +
     geom_hline(yintercept = 0, linetype = "dashed") + 
     labs(y = "", x = "", title = "Max Annual Ground Temperature", col = "Site") +
     geom_line(data = v3match %>% filter(Type=="max") %>% group_by(Name, Depth) %>% summarise(mSite = median(resid)),
