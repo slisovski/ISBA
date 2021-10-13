@@ -112,14 +112,14 @@ _Figure 2.1: Frequency distribution of annual ground temperatures for in-site me
     theme_bw() +
     theme(text = element_text(size=rel(4)), plot.title = element_text(size=15))
   
-  png("figures/Figure_2.2.png", width = 29, height = 12, units = "cm", res = 250)
+  png("figures/Figure_2.2new.png", width = 29, height = 12, units = "cm", res = 250)
       gridExtra::grid.arrange(mean, min, max, nrow = 1, bottom = "Depth [cm]", left = "Match-up residuals [°C]")
   dev.off()
   ```
 </details><br/> 
 
 
-![](figures/Figure_2.2.png)
+![](figures/Figure_2.2new.png)
 
 _Figure 2.2: Residuals of Match-up temperature data between in-situ measurements and ISBA simulation._
 

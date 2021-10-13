@@ -354,12 +354,12 @@ Summary plot
     theme_bw() +
     theme(text = element_text(size=rel(4)), plot.title = element_text(size=15))
   
-  png(&quot;figures/Figure_2.2.png&quot;, width = 29, height = 12, units = &quot;cm&quot;, res = 250)
+  png(&quot;figures/Figure_2.2new.png&quot;, width = 29, height = 12, units = &quot;cm&quot;, res = 250)
       gridExtra::grid.arrange(mean, min, max, nrow = 1, bottom = &quot;Depth [cm]&quot;, left = &quot;Match-up residuals [°C]&quot;)
   dev.off()</code></pre>
 </details>
 <p><br/></p>
-<p><img src="figures/Figure_2.2.png" /></p>
+<p><img src="figures/Figure_2.2new.png" /></p>
 <p><em>Figure 2.2: Residuals of Match-up temperature data between in-situ measurements and ISBA simulation.</em></p>
 
 
