@@ -288,82 +288,105 @@ R Library
   sf::sf_use_s2(FALSE)</code></pre>
 </details>
 <p><br/></p>
-<pre><code>## `summarise()` has grouped output by &#39;Site&#39;, &#39;Depth&#39;. You can override using the `.groups` argument.</code></pre>
 <details>
 <summary>
 Match-up
 </summary>
-<pre class="r"><code>  v3match &lt;- v3Dat %&gt;% filter(Name%in%unique(statsTab$Site) &amp; Year%in%statsTab$Year)
-  v3match$ISBA &lt;- apply(as.data.frame(v3match), 1, function(x) {
-    tmp &lt;- statsTab %&gt;% filter(Site==as.character(x[3]) &amp; Year==as.numeric(x[7]) &amp; Type==as.character(x[9]))
-    approx(x = tmp$Depth, y = tmp$value, xout = x[10])$y
-  })
-  v3match &lt;- v3match %&gt;% mutate(resid = ISBA - Temperature)</code></pre>
+<pre class="r"><code>    v3match &lt;- v3Dat %&gt;% filter(Name%in%unique(statsTab$Site) &amp; Year%in%statsTab$Year)
+    v3match$ISBA_true &lt;- apply(as.data.frame(v3match), 1, function(x) {
+      tmp &lt;- statsTab %&gt;% filter(Site==as.character(x[3]) &amp; Year==as.numeric(x[7]) &amp; Type==as.character(x[9]))
+      with(tmp %&gt;% filter(Dataset==&quot;Ass_true&quot;), approx(x = Depth, y = Temperature, xout = x[10])$y)
+    })
+    v3match$ISBA_false &lt;- apply(as.data.frame(v3match), 1, function(x) {
+      tmp &lt;- statsTab %&gt;% filter(Site==as.character(x[3]) &amp; Year==as.numeric(x[7]) &amp; Type==as.character(x[9]))
+      with(tmp %&gt;% filter(Dataset==&quot;Ass_false&quot;), approx(x = Depth, y = Temperature, xout = x[10])$y)
+    })
+    v3match &lt;- v3match %&gt;% mutate(Delta_true = ISBA_true - Temperature, Delta_false = ISBA_false - Temperature)</code></pre>
 </details>
 <p><br/></p>
 <details>
 <summary>
 Match-up
 </summary>
-<pre class="r"><code>  histDat &lt;- v3match %&gt;% select(Type, Temperature, ISBA) %&gt;% 
-    pivot_longer(cols = c(Temperature, ISBA)) %&gt;% mutate(name = ifelse(name==&quot;Temperature&quot;, &quot;In-situ&quot;, name))
-  
-  png(&quot;figures/Figure_2.1.png&quot;, width = 29, height = 12, units = &quot;cm&quot;, res = 250)
-  ggplot(histDat) + geom_histogram(aes(x = value, fill = name), binwidth=1, position=&quot;dodge&quot;) +
-    theme_bw() + labs(x = &quot;Ground temperature&quot;, y = &quot;Frequency&quot;) +
-    facet_grid(~ as.factor(Type))
-  dev.off()</code></pre>
+<pre class="r"><code>    histDat &lt;- v3match %&gt;% select(Type, Temperature, ISBA_true, ISBA_false) %&gt;% 
+      pivot_longer(cols = c(Temperature, ISBA_true, ISBA_false)) %&gt;% mutate(name = ifelse(name==&quot;Temperature&quot;, &quot;In-situ&quot;, name))
+    
+    png(&quot;figures/Figure_2.1.png&quot;, width = 29, height = 12, units = &quot;cm&quot;, res = 250)
+    ggplot(histDat) + geom_histogram(aes(x = value, fill = name), binwidth=1.5, position=&quot;dodge&quot;) +
+      theme_bw() + labs(x = &quot;Ground temperature&quot;, y = &quot;Frequency&quot;, fill = &quot;Dataset&quot;) +
+      facet_grid(~ as.factor(Type))
+    dev.off()</code></pre>
 </details>
 <p><br/></p>
-<p><img src="figures/Figure_2.1.png" /> <em>Figure 2.1: Frequency distribution of annual ground temperatures for in-site measurements and ISBA simulation.</em></p>
+<p><img src="figures/Figure_2.1.png" /></p>
+<p><em>Figure 2.1: Frequency distribution of annual ground temperatures for in-site measurements and ISBA simulation (true = with assimitation, false = without assimilation).</em></p>
 <details>
 <summary>
 Summary plot
 </summary>
-<pre class="r"><code>  mean &lt;- ggplot(NULL, aes(x,y)) +
-    geom_point(data = v3match %&gt;% filter(Type==&quot;mean&quot;), mapping = aes(as.numeric(as.character(Depth)), resid)) +
-    ylim(min(v3match %&gt;% filter(Type==&quot;mean&quot;) %&gt;% pull(resid)), 0.5) +
-    geom_hline(yintercept = 0, linetype = &quot;dashed&quot;) + 
-    labs(y = &quot;&quot;, x = &quot;&quot;, title = &quot;Mean Annual Ground Temperature&quot;, col = &quot;Site&quot;) +
-    geom_line(data = v3match %&gt;% filter(Type==&quot;mean&quot;) %&gt;% group_by(Name, Depth) %&gt;% 
-    summarise(mSite = median(resid)),
-              mapping = aes(x = as.numeric(as.character(Depth)), y = mSite, col = Name)) +
-    theme_bw() +
-    theme(text = element_text(size=rel(4)), plot.title = element_text(size=15),
-          legend.position = c(0.65, 0.7),
-          legend.background = element_rect(fill = &quot;white&quot;, size=0.5, linetype=&quot;solid&quot;, 
-                                    colour =&quot;grey29&quot;),
-          legend.text = element_text(size=10))</code></pre>
-<pre><code>  ## `summarise()` has grouped output by &#39;Name&#39;. You can override using the `.groups` argument.</code></pre>
-<pre class="r"><code>  max &lt;- ggplot(NULL, aes(x,y)) +
-    geom_point(data = v3match %&gt;% filter(Type==&quot;max&quot;), mapping = aes(as.numeric(as.character(Depth)), resid)) +
-    ylim(min(v3match %&gt;% filter(Type==&quot;max&quot;) %&gt;% pull(resid)), 10) +
-    geom_hline(yintercept = 0, linetype = &quot;dashed&quot;) + 
-    labs(y = &quot;&quot;, x = &quot;&quot;, title = &quot;Max Annual Ground Temperature&quot;, col = &quot;Site&quot;) +
-    geom_line(data = v3match %&gt;% filter(Type==&quot;max&quot;) %&gt;% group_by(Name, Depth) %&gt;% summarise(mSite = median(resid)),
-              mapping = aes(x = as.numeric(as.character(Depth)), y = mSite, col = Name), show.legend = F) +
-    theme_bw() +
-    theme(text = element_text(size=rel(4)), plot.title = element_text(size=15))</code></pre>
-<pre><code>  ## `summarise()` has grouped output by &#39;Name&#39;. You can override using the `.groups` argument.</code></pre>
-<pre class="r"><code>  min &lt;- ggplot(NULL, aes(x,y)) +
-    geom_point(data = v3match %&gt;% filter(Type==&quot;min&quot;), mapping = aes(as.numeric(as.character(Depth)), resid)) +
-    ylim(min(v3match %&gt;% filter(Type==&quot;min&quot;) %&gt;% pull(resid)), 0.5) +
-    geom_hline(yintercept = 0, linetype = &quot;dashed&quot;) + 
-    labs(y = &quot;&quot;, x = &quot;&quot;, title = &quot;Min Annual Ground Temperature&quot;, col = &quot;Site&quot;) +
-    geom_line(data = v3match %&gt;% filter(Type==&quot;min&quot;) %&gt;% group_by(Name, Depth) %&gt;% summarise(mSite = median(resid)),
-              mapping = aes(x = as.numeric(as.character(Depth)), y = mSite, col = Name), show.legend = F) +
-    theme_bw() +
-    theme(text = element_text(size=rel(4)), plot.title = element_text(size=15))</code></pre>
-<pre><code>  ## `summarise()` has grouped output by &#39;Name&#39;. You can override using the `.groups` argument.</code></pre>
-<pre class="r"><code>  png(&quot;figures/Figure_2.3.png&quot;, width = 29, height = 12, units = &quot;cm&quot;, res = 250)
-      gridExtra::grid.arrange(mean, min, max, nrow = 1, bottom = &quot;Depth [cm]&quot;, left = &quot;Match-up residuals [°C]&quot;)
-  dev.off()</code></pre>
+<pre class="r"><code>  dset &lt;- v3match %&gt;% select(Name, Type, Depth, Delta_true, Delta_false) %&gt;%
+    pivot_longer(c(Delta_true, Delta_false)) %&gt;% rename(Assimilation = name) %&gt;%
+    mutate(Assimilation = ifelse(endsWith(Assimilation, &quot;true&quot;), &quot;true&quot;, &quot;false&quot;))
+  
+    mean &lt;- ggplot(NULL, aes(x,y)) +
+      geom_point(data = dset %&gt;% filter(Type==&quot;mean&quot;), 
+                 mapping = aes(as.numeric(as.character(Depth)), value, shape = Assimilation)) +
+      ylim(min(dset %&gt;% filter(Type==&quot;mean&quot;) %&gt;% pull(value)), 0.5) +
+      geom_hline(yintercept = 0, linetype = &quot;dashed&quot;) + 
+      labs(y = &quot;&quot;, x = &quot;&quot;, title = &quot;Mean Annual Ground Temperature&quot;, col = &quot;Site&quot;) +
+      geom_line(data = dset %&gt;% filter(Type==&quot;mean&quot;) %&gt;% group_by(Name, Depth, Assimilation) %&gt;% 
+                        summarise(mSite = median(value)),
+                mapping = aes(x = as.numeric(as.character(Depth)), y = mSite, col = Name, linetype = Assimilation)) +
+      theme_bw() +
+      theme(text = element_text(size=rel(4)), plot.title = element_text(size=15),
+            legend.position = c(0.65, 0.7),
+            legend.background = element_rect(fill = &quot;white&quot;, size=0.5, linetype=&quot;solid&quot;, 
+                                      colour =&quot;grey29&quot;),
+            legend.text = element_text(size=10))</code></pre>
+<pre><code>  ## `summarise()` has grouped output by &#39;Name&#39;, &#39;Depth&#39;. You can override using the `.groups` argument.</code></pre>
+<pre class="r"><code>    max &lt;- ggplot(NULL, aes(x,y)) +
+      geom_point(data = dset %&gt;% filter(Type==&quot;max&quot;), 
+                 mapping = aes(as.numeric(as.character(Depth)), value, shape = Assimilation), show.legend = FALSE) +
+      ylim(min(dset %&gt;% filter(Type==&quot;max&quot;) %&gt;% pull(value)), 0.5) +
+      geom_hline(yintercept = 0, linetype = &quot;dashed&quot;) + 
+      labs(y = &quot;&quot;, x = &quot;&quot;, title = &quot;Max Annual Ground Temperature&quot;, col = &quot;Site&quot;) +
+      geom_line(data = dset %&gt;% filter(Type==&quot;max&quot;) %&gt;% group_by(Name, Depth, Assimilation) %&gt;% 
+                        summarise(mSite = median(value)),
+                mapping = aes(x = as.numeric(as.character(Depth)), y = mSite, col = Name, linetype = Assimilation), show.legend = FALSE) +
+      theme_bw() +
+      theme(text = element_text(size=rel(4)), plot.title = element_text(size=15))</code></pre>
+<pre><code>  ## `summarise()` has grouped output by &#39;Name&#39;, &#39;Depth&#39;. You can override using the `.groups` argument.</code></pre>
+<pre class="r"><code>    min &lt;- ggplot(NULL, aes(x,y)) +
+      geom_point(data = dset %&gt;% filter(Type==&quot;min&quot;), 
+                 mapping = aes(as.numeric(as.character(Depth)), value, shape = Assimilation), show.legend = FALSE) +
+      ylim(min(dset %&gt;% filter(Type==&quot;min&quot;) %&gt;% pull(value)), 0.5) +
+      geom_hline(yintercept = 0, linetype = &quot;dashed&quot;) + 
+      labs(y = &quot;&quot;, x = &quot;&quot;, title = &quot;Min Annual Ground Temperature&quot;, col = &quot;Site&quot;) +
+      geom_line(data = dset %&gt;% filter(Type==&quot;min&quot;) %&gt;% group_by(Name, Depth, Assimilation) %&gt;% 
+                        summarise(mSite = median(value)),
+                mapping = aes(x = as.numeric(as.character(Depth)), y = mSite, col = Name, linetype = Assimilation), show.legend = FALSE) +
+      theme_bw() +
+      theme(text = element_text(size=rel(4)), plot.title = element_text(size=15))</code></pre>
+<pre><code>  ## `summarise()` has grouped output by &#39;Name&#39;, &#39;Depth&#39;. You can override using the `.groups` argument.</code></pre>
+<pre class="r"><code>    png(&quot;figures/Figure_2.2.png&quot;, width = 29, height = 12, units = &quot;cm&quot;, res = 250)
+        gridExtra::grid.arrange(mean, min, max, nrow = 1, bottom = &quot;Depth [cm]&quot;, left = &quot;Match-up residuals [°C]&quot;)
+    dev.off()</code></pre>
 <pre><code>  ## quartz_off_screen 
   ##                 2</code></pre>
 </details>
 <p><br/></p>
-<p><img src="figures/Figure_2.3.png" /></p>
-<p><em>Figure 2.2: Residuals of Match-up temperature data between in-situ measurements and ISBA simulation.</em></p>
+<p><img src="figures/Figure_2.2.png" /> <em>Figure 2.2: Residuals of Match-up temperature data between in-situ measurements and ISBA simulation (residuals = ISBA simulation - in-situ Temperature).</em></p>
+<details>
+<summary>
+Bias table
+</summary>
+<pre class="r"><code>  biasTab &lt;- v3match %&gt;% pivot_longer(c(Delta_true, Delta_false)) %&gt;%
+    rename(Assimilation = name, Delta = value) %&gt;% mutate(Assimilation = ifelse(endsWith(Assimilation, &quot;true&quot;), &quot;true&quot;, &quot;false&quot;)) %&gt;%
+    group_by(Name, Type, Assimilation) %&gt;% summarise(q50_bias = median(Delta), q5_bias = quantile(Delta, probs = 0.05), 
+                                                     q95_bias = quantile(Delta, probs = 0.95))</code></pre>
+</details>
+<p><br/></p>
+<p><em>Table 2.1: Median (and 5% as well as 95% credibility interval) of the bias between ISBA annual (mean, min, max) ground temperatures and in-situ ground temperature measurements.</em> <img src="figures/TabBias.png" /></p>
 
 
 

@@ -336,9 +336,14 @@ ISBA dataset
   crds  &lt;- matrix(c(ncvar_get(ncFile, &quot;lon&quot;), ncvar_get(ncFile, &quot;lat&quot;)), ncol = 2, byrow = F)
   depth &lt;- ncvar_get(ncFile, &quot;depth&quot;)
   time  &lt;- as.POSIXct(&quot;2008-01-01 00:00:00.0&quot;, tz = &quot;UTC&quot;) + ncvar_get(ncFile, &quot;time&quot;)*60*60
-  tempA &lt;- ncvar_get(ncFile, &quot;temperature&quot;)
+  tempA1 &lt;- ncvar_get(ncFile, &quot;temperature&quot;)
   
   nc_close(ncFile)
+  
+  ncFile &lt;- nc_open(&quot;data/TG_without_assimilation.nc&quot;)
+  tempA2 &lt;- ncvar_get(ncFile, &quot;temperature&quot;)
+  nc_close(ncFile)
+  
   
   ## closest site
   sf_sites &lt;- st_as_sf(v3Dat %&gt;% filter(!duplicated(Name)) %&gt;% select(c(cci_ID, Name, Longitude, Latitude)),
@@ -352,15 +357,15 @@ ISBA dataset
   sites    &lt;- as_tibble(dat[!is.na(dat$dist),c(1,5:6)]) %&gt;% arrange(site, dist) %&gt;% filter(!duplicated(site))
   
   ## Annual min, mean, max
-  out &lt;- as_tibble(data.frame(Site  = rep(rep(sites$Name, each = dim(tempA)[1]), dim(tempA)[3]), 
-                              Time  = rep(time, each = dim(tempA)[1]*dim(tempA)[2]),
-                              Depth = rep(depth, dim(tempA)[2]*dim(tempA)[3]), Temp = c(tempA))) %&gt;%
-          mutate(Temp = Temp - 273.15)
+  out &lt;- as_tibble(data.frame(Site  = rep(rep(sites$Name, each = dim(tempA1)[1]), dim(tempA1)[3]), 
+                              Time  = rep(time, each = dim(tempA1)[1]*dim(tempA1)[2]),
+                              Depth = rep(depth, dim(tempA1)[2]*dim(tempA1)[3]), Temp_1 = c(tempA1), Temp_2 = c(tempA2))) %&gt;%
+          mutate(Temp_1 = Temp_1 - 273.15, Temp_2 = Temp_2 - 273.15)
   
   statsTab &lt;- out %&gt;% filter(Site!=&quot;Upper river Lotta&quot;) %&gt;% 
     mutate(Year = as.numeric(format(Time, &quot;%Y&quot;)), Month = as.numeric(format(Time, &quot;%m&quot;))) %&gt;%
     group_by(Site, Depth, Year, Month) %&gt;% 
-    summarise_at(vars(Temp), list(Min = min, Mean = mean, Max = max)) %&gt;%
+    summarise(Min = min(Temp_1), Mean = mean(Temp_1), Max = max(Temp_1)) %&gt;%
     group_by(Site, Depth, Year) %&gt;% 
     summarise(Mean = mean(Mean), Max = mean(Max), Min = mean(Min)) %&gt;%
     mutate(x = as.POSIXct(glue::glue(&quot;{Year}-06-21&quot;))) %&gt;%
@@ -370,17 +375,17 @@ ISBA dataset
     
   pl &lt;- ggplot(NULL, aes(x, y)) +
     geom_point(data = out %&gt;% filter(Site==s),
-               mapping = aes(x = Time, y = Temp), shape = 16, size = 0.2, alpha = 0.2) +
+               mapping = aes(x = Time, y = Temp_1), shape = 16, size = 0.2, alpha = 0.2) +
     geom_point(data = statsTab %&gt;% filter(Site==s),
                mapping = aes(x = x, y = Max, fill = as.factor(round(Depth*100,1))), 
                shape = 24, size = 2, show.legend = FALSE) +
     geom_point(data = statsTab %&gt;% filter(Site==s),
                mapping = aes(x = x, y = Min, fill = as.factor(round(Depth*100,1))), 
                shape = 25, size = 2, show.legend = FALSE) +
-    geom_point(data = statsTab %&gt;% filter(Site==s), 
+    geom_point(data = statsTab %&gt;% filter(Site==s),
                mapping = aes(x = x, y = Mean, fill = as.factor(round(Depth*100,1))), 
                shape = 21, size = 2, show.legend = FALSE) +
-    ylim(range(out$Temp, na.rm = T)) +
+    ylim(range(out$Temp_1, na.rm = T)) +
     labs(y = &quot;Temperature&quot;, x = &quot;&quot;, title = s) +
     theme(text = element_text(size=rel(4))) +
     theme_bw()
@@ -392,134 +397,7 @@ ISBA dataset
 </details>
 <p><br/></p>
 <p><img src="figures/Figure_1.1.png" /></p>
-<p><em>Figure 1.1: ISBA simulation data for two sites. Gray dots show original ground temperature at different depths and a 3 hour interval. Colored circles are annual mean ground temperatures for different depths. Triangles to top and bottom show maximal annual and minimal annual ground temperatures respectively.</em></p>
-<pre><code>## `summarise()` has grouped output by &#39;Site&#39;, &#39;Depth&#39;. You can override using the `.groups` argument.</code></pre>
-<table>
-<caption>Annual statistics for the Year 2008 in Kanevka</caption>
-<thead>
-<tr class="header">
-<th align="left">Site</th>
-<th align="right">Depth</th>
-<th align="right">Mean</th>
-<th align="right">Max</th>
-<th align="right">Min</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td align="left">Kanevka</td>
-<td align="right">1</td>
-<td align="right">0.2976137</td>
-<td align="right">7.5915492</td>
-<td align="right">-6.6115148</td>
-</tr>
-<tr class="even">
-<td align="left">Kanevka</td>
-<td align="right">80</td>
-<td align="right">-0.4797693</td>
-<td align="right">0.1909017</td>
-<td align="right">-1.1756068</td>
-</tr>
-<tr class="odd">
-<td align="left">Kanevka</td>
-<td align="right">100</td>
-<td align="right">-0.4803857</td>
-<td align="right">0.0743830</td>
-<td align="right">-0.9254415</td>
-</tr>
-<tr class="even">
-<td align="left">Kanevka</td>
-<td align="right">120</td>
-<td align="right">-0.4279756</td>
-<td align="right">-0.0197027</td>
-<td align="right">-0.7561757</td>
-</tr>
-<tr class="odd">
-<td align="left">Kanevka</td>
-<td align="right">200</td>
-<td align="right">-0.2379199</td>
-<td align="right">-0.0893692</td>
-<td align="right">-0.3724299</td>
-</tr>
-<tr class="even">
-<td align="left">Kanevka</td>
-<td align="right">500</td>
-<td align="right">-0.1988024</td>
-<td align="right">-0.1725830</td>
-<td align="right">-0.2237406</td>
-</tr>
-<tr class="odd">
-<td align="left">Kanevka</td>
-<td align="right">1000</td>
-<td align="right">-0.2531789</td>
-<td align="right">-0.2491058</td>
-<td align="right">-0.2573151</td>
-</tr>
-</tbody>
-</table>
-<table>
-<caption>Annual statistics for the Year 2008 in Krasnoshchelie</caption>
-<thead>
-<tr class="header">
-<th align="left">Site</th>
-<th align="right">Depth</th>
-<th align="right">Mean</th>
-<th align="right">Max</th>
-<th align="right">Min</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td align="left">Krasnoshchelie</td>
-<td align="right">1</td>
-<td align="right">0.6061129</td>
-<td align="right">7.9061778</td>
-<td align="right">-6.9167262</td>
-</tr>
-<tr class="even">
-<td align="left">Krasnoshchelie</td>
-<td align="right">80</td>
-<td align="right">-0.3239190</td>
-<td align="right">0.3853928</td>
-<td align="right">-0.9730413</td>
-</tr>
-<tr class="odd">
-<td align="left">Krasnoshchelie</td>
-<td align="right">100</td>
-<td align="right">-0.3427054</td>
-<td align="right">0.1603917</td>
-<td align="right">-0.7471909</td>
-</tr>
-<tr class="even">
-<td align="left">Krasnoshchelie</td>
-<td align="right">120</td>
-<td align="right">-0.3165978</td>
-<td align="right">0.0359334</td>
-<td align="right">-0.6237371</td>
-</tr>
-<tr class="odd">
-<td align="left">Krasnoshchelie</td>
-<td align="right">200</td>
-<td align="right">-0.2229277</td>
-<td align="right">-0.1379735</td>
-<td align="right">-0.3066594</td>
-</tr>
-<tr class="even">
-<td align="left">Krasnoshchelie</td>
-<td align="right">500</td>
-<td align="right">-0.2525089</td>
-<td align="right">-0.2370819</td>
-<td align="right">-0.2683116</td>
-</tr>
-<tr class="odd">
-<td align="left">Krasnoshchelie</td>
-<td align="right">1000</td>
-<td align="right">-0.2631447</td>
-<td align="right">-0.2612289</td>
-<td align="right">-0.2648249</td>
-</tr>
-</tbody>
-</table>
+<p><em>Figure 1.1: ISBA simulation data (no assimilation) for two sites. Gray dots show original ground temperature at different depths and a 3 hour interval. Colored circles are annual mean ground temperatures for different depths. Triangles to top and bottom show maximal annual and minimal annual ground temperatures respectively.</em></p>
 
 
 
