@@ -152,3 +152,66 @@ _Figure 2.2: Residuals of Match-up temperature data between in-situ measurements
 
 _Table 2.1: Median (and 5% as well as 95% credibility interval) of the bias between ISBA annual (mean, min, max) ground temperatures and in-situ ground temperature measurements._
 ![](figures/TabBias.png)
+
+<details>
+  <summary>Inter annual variation plot</summary>
+  ```{r, eval = FALSE}
+  dYear <- as.tibble(bind_rows(lapply(split(v3match, list(v3match$Name, v3match$Type, v3match$Depth)), function(x) 
+    data.frame(Name = x$Name[-1], Year = min(x$Year)+cumsum(diff(x$Year)), Tyep = x$Type[-1], Depth = x$Depth[-1],
+               dTemp = diff(x$Temperature), ISBA_true = diff(x$ISBA_true), ISBA_false = diff(x$ISBA_false))))) %>%
+    pivot_longer(cols = c(ISBA_true, ISBA_false)) %>% rename(dISBA = value, ISBAtype = name)
+  
+  pl1 <- ggplot(dYear, aes(x = dTemp, y = dISBA, fill = ISBAtype, group = ISBAtype, col = ISBAtype)) + 
+    geom_point(shape = 21) +
+    geom_smooth(method = "lm", se = TRUE, size   = .5, alpha  = .2) +
+    xlim(range(c(dYear$dTemp, dYear$dISBA))) + ylim(range(c(dYear$dTemp, dYear$dISBA))) +
+    geom_abline(slope = 1, linetype = "dotted") +
+    theme_bw() + 
+    labs(x = "", y = "", title = glue::glue("Rsquare = {round(cor(dYear$dTemp, dYear$dISBA)^2,3)}")) +
+    theme(text = element_text(size=rel(4)),
+          title = element_text(size=10),
+          legend.text = element_text(size=10))
+  
+  pl2 <- ggplot(dYear, aes(x = dTemp, y = dISBA, fill = Name, group = Name, col = Name)) + 
+    geom_point(shape = 21) +
+    geom_smooth(method = "lm", se = TRUE, size   = .5, alpha  = .2) +
+    xlim(range(c(dYear$dTemp, dYear$dISBA))) + ylim(range(c(dYear$dTemp, dYear$dISBA))) +
+    geom_abline(slope = 1, linetype = "dotted") +
+    theme_bw() + 
+    labs(x = "", y = "") +
+    theme(text = element_text(size=rel(4)),
+          legend.text = element_text(size=10))
+  
+  
+  png("figures/Figure_2.3.png", width = 29, height = 12, units = "cm", res = 250)
+        gridExtra::grid.arrange(pl1, pl2, nrow = 1, left = "Inter annual differences in modeled MAGT [°C]", bottom = "Inter annual differences in in-situ MAGT [°C]")
+  dev.off()
+  ```
+</details><br/>
+
+![](figures/Figure_2.3.png)
+_Figure 2.3: Correlation (match-up) plot of inter-annual variation in MAGT across depths between in-situ measurements and ISBA modeled temperature values._
+
+<details>
+  <summary>Inter annual variation residuals</summary>
+  ```{r, eval = FALSE}
+  dYear <- as.tibble(bind_rows(lapply(split(v3match, list(v3match$Name, v3match$Type, v3match$Depth)), function(x) 
+    suppressWarnings(data.frame(Name = x$Name[-1], Year = min(x$Year)+cumsum(diff(x$Year)), Tyep = x$Type[-1], Depth = x$Depth[-1],
+                 dTemp = diff(x$Temperature), ISBA_true = diff(x$ISBA_true), ISBA_false = diff(x$ISBA_false)))))) %>%
+    pivot_longer(cols = c(ISBA_true, ISBA_false)) %>% rename(dISBA = value, ISBAtype = name) %>%
+    mutate(residuals = as.numeric(resid(lm(dISBA-dTemp ~ 0))))
+  
+  png("figures/Figure_2.4.png", width = 29, height = 12, units = "cm", res = 250)
+  ggplot(dYear, aes(x = Depth, y = residuals, fill = ISBAtype)) +
+    geom_point(shape = 21) +
+    geom_abline(slope = 0, linetype = "dotted") +
+    theme_bw() +
+    labs(x = "Depths", y = "Residuals (to diagonal)")+
+    theme(text = element_text(size=rel(4)),
+          legend.text = element_text(size=10))
+  dev.off()
+  ```
+</details><br/>
+
+![](figures/Figure_2.4.png)
+_Figure 2.4: Residuals of inter-annual variation match-up across depths._

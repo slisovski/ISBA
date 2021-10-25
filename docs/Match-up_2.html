@@ -14,8 +14,8 @@
 
 <title>Match-up &amp; Results</title>
 
-<script src="site_libs/header-attrs-2.10/header-attrs.js"></script>
-<script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
+<script src="site_libs/header-attrs-2.11/header-attrs.js"></script>
+<script src="site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <link href="site_libs/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
 <script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
@@ -387,6 +387,65 @@ Bias table
 </details>
 <p><br/></p>
 <p><em>Table 2.1: Median (and 5% as well as 95% credibility interval) of the bias between ISBA annual (mean, min, max) ground temperatures and in-situ ground temperature measurements.</em> <img src="figures/TabBias.png" /></p>
+<details>
+<summary>
+Inter annual variation plot
+</summary>
+<pre class="r"><code>  dYear &lt;- as.tibble(bind_rows(lapply(split(v3match, list(v3match$Name, v3match$Type, v3match$Depth)), function(x) 
+    data.frame(Name = x$Name[-1], Year = min(x$Year)+cumsum(diff(x$Year)), Tyep = x$Type[-1], Depth = x$Depth[-1],
+               dTemp = diff(x$Temperature), ISBA_true = diff(x$ISBA_true), ISBA_false = diff(x$ISBA_false))))) %&gt;%
+    pivot_longer(cols = c(ISBA_true, ISBA_false)) %&gt;% rename(dISBA = value, ISBAtype = name)
+  
+  pl1 &lt;- ggplot(dYear, aes(x = dTemp, y = dISBA, fill = ISBAtype, group = ISBAtype, col = ISBAtype)) + 
+    geom_point(shape = 21) +
+    geom_smooth(method = &quot;lm&quot;, se = TRUE, size   = .5, alpha  = .2) +
+    xlim(range(c(dYear$dTemp, dYear$dISBA))) + ylim(range(c(dYear$dTemp, dYear$dISBA))) +
+    geom_abline(slope = 1, linetype = &quot;dotted&quot;) +
+    theme_bw() + 
+    labs(x = &quot;&quot;, y = &quot;&quot;, title = glue::glue(&quot;Rsquare = {round(cor(dYear$dTemp, dYear$dISBA)^2,3)}&quot;)) +
+    theme(text = element_text(size=rel(4)),
+          title = element_text(size=10),
+          legend.text = element_text(size=10))
+  
+  pl2 &lt;- ggplot(dYear, aes(x = dTemp, y = dISBA, fill = Name, group = Name, col = Name)) + 
+    geom_point(shape = 21) +
+    geom_smooth(method = &quot;lm&quot;, se = TRUE, size   = .5, alpha  = .2) +
+    xlim(range(c(dYear$dTemp, dYear$dISBA))) + ylim(range(c(dYear$dTemp, dYear$dISBA))) +
+    geom_abline(slope = 1, linetype = &quot;dotted&quot;) +
+    theme_bw() + 
+    labs(x = &quot;&quot;, y = &quot;&quot;) +
+    theme(text = element_text(size=rel(4)),
+          legend.text = element_text(size=10))
+  
+  
+  png(&quot;figures/Figure_2.3.png&quot;, width = 29, height = 12, units = &quot;cm&quot;, res = 250)
+        gridExtra::grid.arrange(pl1, pl2, nrow = 1, left = &quot;Inter annual differences in modeled MAGT [°C]&quot;, bottom = &quot;Inter annual differences in in-situ MAGT [°C]&quot;)
+  dev.off()</code></pre>
+</details>
+<p><br/></p>
+<p><img src="figures/Figure_2.3.png" /> <em>Figure 2.3: Correlation (match-up) plot of inter-annual variation in MAGT across depths between in-situ measurements and ISBA modeled temperature values.</em></p>
+<details>
+<summary>
+Inter annual variation residuals
+</summary>
+<pre class="r"><code>  dYear &lt;- as.tibble(bind_rows(lapply(split(v3match, list(v3match$Name, v3match$Type, v3match$Depth)), function(x) 
+    suppressWarnings(data.frame(Name = x$Name[-1], Year = min(x$Year)+cumsum(diff(x$Year)), Tyep = x$Type[-1], Depth = x$Depth[-1],
+                 dTemp = diff(x$Temperature), ISBA_true = diff(x$ISBA_true), ISBA_false = diff(x$ISBA_false)))))) %&gt;%
+    pivot_longer(cols = c(ISBA_true, ISBA_false)) %&gt;% rename(dISBA = value, ISBAtype = name) %&gt;%
+    mutate(residuals = as.numeric(resid(lm(dISBA-dTemp ~ 0))))
+  
+  png(&quot;figures/Figure_2.4.png&quot;, width = 29, height = 12, units = &quot;cm&quot;, res = 250)
+  ggplot(dYear, aes(x = Depth, y = residuals, fill = ISBAtype)) +
+    geom_point(shape = 21) +
+    geom_abline(slope = 0, linetype = &quot;dotted&quot;) +
+    theme_bw() +
+    labs(x = &quot;Depths&quot;, y = &quot;Residuals (to diagonal)&quot;)+
+    theme(text = element_text(size=rel(4)),
+          legend.text = element_text(size=10))
+  dev.off()</code></pre>
+</details>
+<p><br/></p>
+<p><img src="figures/Figure_2.4.png" /> <em>Figure 2.4: Residuals of inter-annual variation match-up across depths.</em></p>
 
 
 
